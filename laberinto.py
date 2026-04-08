@@ -1,25 +1,23 @@
 import copy # para no repetir codigo y simula el siguiente movimento
 import os # limpia la pantalla y luego actualiza os.system("cls" if os.name == "nt" else "clear")
 import math # operaciones matematicas para calcular distancias y evaluar movimientos
-import random #para valores aleatorios
-# recibe valore constantes y debe colocar
 
 # Diccionario que mapea teclas a desplazamientos en el tablero (fila, columna)
 mover = {
-            'W':[-1,0],# solo mira el teclado
+            'W':[-1,0],# mueve hacia arriba fila -1
     'A':[0,-1],'S':[1,0],'D':[0,1]
 }
 #--------------------------------------------------
 # FUNCIONES AUXILIARES
-# QUE LINDA TE VES TRAPIANDO ESPERANCITA PERO... 
-# LIMPIA TERMINAL
+# QUE LINDA TE VES TRAPIANDO ESPERANCITA PERO... Te falto aqui
+# LIMPIA pantalla
 def limpiaPantalla():
     os.system("cls" if os.name == "nt" else "clear")
 #------------------------------------------------------
 
 # REGLAS DE DESPLASAMIENTO POR FILA Y COLUNNA ALTO Y ANCHO EVITA SALIR DEL LABERINTO
 def moverEn(fila,columna,alto,ancho):
-    aqui=[] # lista para guardar direcciones validas Lista que almacenará las coordenadas válidas
+    aqui=[] # lista que almacena las posiciones válidas
     direccion = [(-1,0),(1,0),(0,-1),(0,1)] # Las cuatro direcciones ortogonales (arriba, abajo, izquierda, derecha)
     #            sube=w|baj=s|izq=a|der=d
     
@@ -31,11 +29,12 @@ def moverEn(fila,columna,alto,ancho):
             aqui.append((nuevaFila,nuevaColumna))# si pasa la verificacion agrega a la lista aqui
     return aqui
 
-#-funcion que calcula el estado actual devuelve 0 si el gato atrapa al raton sino devuelve la distanciaentre dos puntos.Se usa como medida de qué tan cerca está el gato del ratón.----------------------------------------------------------------------------------------------
+#-Calcula la distancia Manhattan entre dos posiciones en el tablero.----------------------------------------------------------------------------------------------
 def calculaAcercamiento (posicion1,posicion2):
-    return math.fabs(posicion1[0]-posicion2[0])+math.fabs(posicion1[1]-posicion2[1])
+    distanciaMahattan=math.fabs(posicion1[0]-posicion2[0])+math.fabs(posicion1[1]-posicion2[1]) #distancia manhattan
+    return distanciaMahattan
 
-# FUNCIONES DE MANEJO DEL ESTADO
+#Evalúa qué tan buena es la posición del ratón. Se basa en la distancia al gato y a la salida.
 def evalua_posicion(situa):
     if situa['gato']==situa['raton']: # Si están en la misma celda -> gato gana
         return -1000 #Gana gato muy malo para el raton
@@ -46,7 +45,9 @@ def evalua_posicion(situa):
     distancia_gato= calculaAcercamiento(situa['gato'],situa['raton'])
     distancia_salida= calculaAcercamiento(situa['raton'],situa['salida'])
     
-    return distancia_gato - distancia_salida
+    seguir_presa = distancia_gato - distancia_salida # HEURISTICA 
+    
+    return seguir_presa
 #-------------------------------------------------------------------------------------
 
 # actualiza el movimiento en el juego con la nueva posicion del gato o raton
@@ -58,26 +59,26 @@ def simula_movimiento(situacion, jugador, nueva_posicion):
         nueva_situacion['raton'] = list(nueva_posicion)
     return nueva_situacion
 
-#████████████████████████████████████████ MINIMAX ██████████████████████████████████████████ explora el árbol de juego hasta la profundidad indicada.
+#████████████████████████████████████████ MINIMAX ███████████████████████████████████████ explora el árbol de juego hasta la profundidad indicada.
 def minimax (estado,profundidad,turno_maximizador,alfa=float('-inf'), beta=float('inf')):
     # Caso base: se alcanzó la profundidad máxima o el gato ya atrapó al ratón
-    if profundidad == 0 or estado['gato']==estado['raton']:
+    if profundidad == 0 or estado ['gato'] == estado ['raton'] or estado ['raton']== estado['salida']:
         return evalua_posicion(estado)
     
     if turno_maximizador: # turno del raton
         mejor_para_raton = float('-inf') # inicia con un numero muy bajo
 #        Obtenemos todos los movimientos legales del ratón
         movimiento= moverEn(
-            estado['raton'][0],estado['raton'][1],# posicion del gato actual
+            estado['raton'][0],estado['raton'][1],# posicion del raton actual
             estado['alto'],estado['ancho']
             )
-        for mov in movimiento:# Simulamos el movimiento en un nuevo estado
+        for mov in movimiento:# # Calcula la distancia Manhattan entre dos posiciones en el tablero Simula el movimiento en un nuevo estado arbol de desicion
             nueva_situacion = simula_movimiento(estado,'R',mov)
         # Llamada recursiva: ahora turno del gato (minimizador)
-            valor= minimax(nueva_situacion,profundidad -1,False,alfa,beta)# 
+            valor= minimax(nueva_situacion,profundidad -1,False,alfa,beta)# recursividad
             mejor_para_raton = max(mejor_para_raton,valor)# compara y guarda el nuevo valor maximo
             alfa = max(alfa,valor)
-            if beta<= alfa:
+            if beta<= alfa: # #  evita evaluar ramas innecesarias
                 break
         return mejor_para_raton
 
@@ -100,9 +101,7 @@ def minimax (estado,profundidad,turno_maximizador,alfa=float('-inf'), beta=float
 
 def estrategia_mover_gato(estado):
     """
-    Elige el mejor movimiento para el gato usando el algoritmo Minimax
-    con una profundidad de 3 niveles.
-    Devuelve la nueva posición (fila, columna) a la que debe moverse el gato.
+    Elige el mejor movimiento para el gato usando el algoritmo Minimax Devuelve la nueva posición (fila, columna) a la que debe moverse el gato.
     """
     mejorJugada=None
     menor_distancia_encontrada=float('inf')  # El gato busca minimizar, así que empezamos con infinito
@@ -115,19 +114,18 @@ def estrategia_mover_gato(estado):
     for mov in opciones:
         #Guarda en esta variable que simula el movimiento del gato
         clon=simula_movimiento(estado,'G',mov)
-        
-        # evalua posibilidades con minimax, de profundiad 3, y el siguiente turno del raton que maximiza
-        valor=minimax(clon,7,True)
+    # evalúa posibles jugadas usando minimax con profundidad 7 (siguiente turno del ratón)
+        chake_Gato=minimax(clon,7,True)
         # Si este movimiento produce un valor menor (mejor para el gato), lo guardamos
-        if valor < menor_distancia_encontrada:
-            menor_distancia_encontrada = valor
+        if chake_Gato < menor_distancia_encontrada:
+            menor_distancia_encontrada = chake_Gato
             mejorJugada = mov
     # Devolvemos la nueva posición (convertida a lista) o la posición actual si no hay movimientos
     return list(mejorJugada) if mejorJugada else estado['gato']
 
 #--------Aqui vamos dibujando en pantalla como queda el laberinto-------------------------------------------------------------------------------------------------------------
 def crea_Laberinto(estado):
-# crear una laberinto lista de listas de 5x5 donde el gato intenta atrapar al raton y el raton intanta huir en 5 momivientos
+# # Crea el tablero (matriz) donde se representa el juego lista de listas de 5x5 
     laberinto = [[" · " for _ in range(estado['ancho'])] for _ in range(estado['alto'])]
     
 # la salida del laberinto lo representamos con un emoji de puerta
@@ -194,10 +192,10 @@ def jugar():
             if nueva_posicion in moverse:
                 area ['raton']=[nueva_fila,nueva_columna]
             else:
-                mensaje=" 🚫 MOVIMIENTO FUERA DE LA ZONA 🙅"
+                mensaje="🚫 MOVIMIENTO FUERA DE LA ZONA 🙅"
                 continue
         else:
-            mensaje=" ⌨️ Tecla desconocida"
+            mensaje=" ⌨️ Tecla inválida, usa solo W, A, S o D  "
 
     # controlar que el raton llego a la salida y gano
         if area['raton']== area['salida']:
@@ -215,8 +213,7 @@ def jugar():
             limpiaPantalla()
             crea_Laberinto(area)
             print("🩸 FATALITY")
-            print("El gato volador atrapo a la ☠️ Raton")
+            print("El gato volador atrapo a la Raton ☠️")
             break  # Termina el juego
 
-if __name__ == "__main__":       
-    jugar()
+jugar()
