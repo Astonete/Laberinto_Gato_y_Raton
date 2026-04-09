@@ -123,23 +123,36 @@ def estrategia_mover_gato(estado):
     # Devolvemos la nueva posición (convertida a lista) o la posición actual si no hay movimientos
     return list(mejorJugada) if mejorJugada else estado['gato']
 
-#--------Aqui vamos dibujando en pantalla como queda el laberinto-------------------------------------------------------------------------------------------------------------
-def crea_Laberinto(estado):
+#--------Aqui vamos dibujando en pantalla como queda el laberinto-------------------------------------------------------------------
+
+def crea_Laberinto(estado): 
+
 # # Crea el tablero (matriz) donde se representa el juego lista de listas de 5x5 
-    laberinto = [[" · " for _ in range(estado['ancho'])] for _ in range(estado['alto'])]
+    laberinto = []
     
-# la salida del laberinto lo representamos con un emoji de puerta
+    for _ in range(estado['alto']):      # bucle externo → filas
+        fila = []
+        for _ in range(estado['ancho']): # bucle interno → columnas
+            fila.append(" · ")
+        laberinto.append(fila)
+        
+    # la salida del laberinto lo representamos con un emoji de puerta
     laberinto[estado['salida'][0]][estado['salida'][1]]="🚪"
+        
+    gato  = estado['gato']
+    raton = estado['raton']
+    salida= estado['salida']
+
     
-    if estado['gato']== estado['raton']:
-        laberinto[estado['gato'][0]][estado['gato'][1]] = "☠️"# gato atrapando al raton
-        
-    elif estado['raton']== estado['salida']:
-        laberinto[estado['raton'][0]][estado['raton'][1]] = "✅ "# El raton llega a la meta
-        
+    if gato == raton:
+        laberinto[gato[0]][gato[1]] = "☠️ "
+
+    elif raton == salida:
+        laberinto[raton[0]][raton[1]] = "✅"
+
     else:
-        laberinto[estado['gato'][0]][estado['gato'][1]]=" 😼 " # Dibujamos gato
-        laberinto[estado['raton'][0]][estado['raton'][1]]=" 🐭" # Dibujamos ratón
+        laberinto[gato[0]][gato[1]]  = "😼"
+        laberinto[raton[0]][raton[1]] = "🐭"    
         
 # Impresión del laberinto con formato
     print("|-----------------------------------------------------------------------------|")
@@ -153,6 +166,7 @@ def crea_Laberinto(estado):
     for fila in laberinto:
         print("".join(fila))
     print("|-----------------------------------------------------------------------------|")
+    
 def jugar():
 # Diccionario con todas las cosas escenciales estado inicial posiciones y tamaño
     area= {
