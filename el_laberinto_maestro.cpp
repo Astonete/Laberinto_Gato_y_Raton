@@ -17,7 +17,7 @@ using namespace std::chrono;
 
 // alias para facilitar
 using Tablero = vector<vector<char>>; // matriz de caracter
-using Coordenada = pair<int, int>;    // posicion (fila,columna en tablero)
+using Coordenada = pair<int, int>;    // posicion (fila,columna en tablero) pair guarda 2 valores juntos
 
 // constantes para el dibujo en tablero
 const char PARED ='#';
@@ -30,10 +30,10 @@ const char HUELLA = '.';
 const int FILA[] = {-1, 1, 0, 0};
 const int COL[] = {0, 0, -1, 1};
 
-void mostrar_laberinto(const Tablero &tablero, const string &titulo);
+void mostrar_laberinto(const Tablero &tablero, const string &titulo);// Tablero es el alias y tablero es el parametro
+
 
 // creacion del laberinto dfs con backtracking
-// valida si se puede hacer el movimiento teneindo en cuenta las filas y columnas
 bool celda_valida(int fila, int col, int total_filas, int total_cols)
 { // en vez de total fila pasar laberinto.size experimentar
     if (fila > 0 && fila < total_filas - 1 && col > 0 && col < total_cols - 1)
@@ -42,6 +42,7 @@ bool celda_valida(int fila, int col, int total_filas, int total_cols)
     }
     return false;
 }
+// valida si se puede hacer el movimiento teneindo en cuenta las filas y columnas
 
 // dfs recursivo abre camino desde la celda (fila columna)
 void dfs_abrir_caminos(Tablero &tablero, int fila, int col, mt19937 &rng)
@@ -149,7 +150,7 @@ bool resolver_laberinto_bfs(Tablero &tablero)
         auto [fila, colu] = cola.front();
         cola.pop();
 
-        // si llegamos a la salidas recostruir y maracar con huellas
+        // si llegamos a la salidas recostruir y maracar con huellas similar al caso base
         if (fila == fin.first && colu == fin.second)
         {
             marca_camino_solucion(tablero, padres, fin);
@@ -236,7 +237,7 @@ void mostrar_laberinto(const Tablero &tablero, const string &titulo)
 {
     cout << "\n\n=== ___" << titulo << "___ ===\n\n";
 
-    for (const auto &fila : tablero)
+    for (const auto &fila : tablero)// variable de iteracion para cada fila del tablero
     {
         for (char celda : fila){
             cout << celda;
